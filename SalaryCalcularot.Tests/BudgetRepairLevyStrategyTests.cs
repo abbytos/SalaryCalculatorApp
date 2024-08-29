@@ -17,7 +17,8 @@ namespace SalaryCalculatorApp.Tests
                 .Build();
 
             // Load the configuration specifically for Budget Repair Levy
-            _config = configuration.GetSection("BudgetRepairLevy").Get<BudgetRepairLevyConfig>();
+            _config = configuration.GetSection("BudgetRepairLevy").Get<BudgetRepairLevyConfig>() 
+                ?? throw new InvalidOperationException("BudgetRepair configuration is missing"); ;
         }
 
         [Theory]

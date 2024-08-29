@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace SalaryCalculatorApp.Utils
+﻿namespace SalaryCalculatorApp.Utils
 {
     /// <summary>
     /// Provides a centralized way to handle exceptions and output error messages.

@@ -1,4 +1,10 @@
 {
+  // Configuration for tax and levy calculations.
+  // Contains thresholds and rates used for calculating Medicare Levy, Income Tax, and Budget Repair Levy.
+  // - MedicareLevy: Defines thresholds and rates for Medicare Levy calculations.
+  // - IncomeTax: Defines thresholds, rates, and base tax amounts for Income Tax calculations.
+  // - BudgetRepairLevy: Defines the threshold and rate for the Budget Repair Levy calculations.
+
   "MedicareLevy": {
     "Threshold1": 21335,
     "Threshold2": 26668,

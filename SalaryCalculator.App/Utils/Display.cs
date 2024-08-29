@@ -1,5 +1,4 @@
 ﻿using SalaryCalculatorApp.Models;
-using System;
 
 namespace SalaryCalculatorApp.Utils
 {
