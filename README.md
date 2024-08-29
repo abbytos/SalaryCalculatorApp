@@ -30,9 +30,6 @@ The **Salary Calculator Application** is a .NET 8.0 Console Application designed
 - **Integration with Payroll Systems**: Provide integration with existing payroll management systems for automated processing.
 - **Advanced Tax Calculations**: Include more complex tax scenarios.
 
-## Deployment
-The application can be deployed as a standalone executable or integrated into a larger payroll management system. Follow standard .NET Core deployment practices for packaging and distribution.
-
 ## Notes
 - **Total time spent on this project**: ~ 6 hours.
 
