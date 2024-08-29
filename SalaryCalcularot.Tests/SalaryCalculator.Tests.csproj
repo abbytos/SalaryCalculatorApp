@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SalaryCalculator.App\SalaryCalculatorApp.csproj" />
+    <ProjectReference Include="..\SalaryCalculator.App\SalaryCalculator.App.csproj" />
   </ItemGroup>
   
 
