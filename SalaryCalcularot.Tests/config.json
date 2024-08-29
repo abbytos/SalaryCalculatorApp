@@ -1,0 +1,26 @@
+{
+  "MedicareLevy": {
+    "Threshold1": 21335,
+    "Threshold2": 26668,
+    "Rate1": 0.10,
+    "Rate2": 0.02
+  },
+  "IncomeTax": {
+    "Threshold1": 18200,
+    "Threshold2": 37000,
+    "Threshold3": 87000,
+    "Threshold4": 180000,
+    "Rate1": 0.19,
+    "Rate2": 0.325,
+    "Rate3": 0.37,
+    "Rate4": 0.47,
+    "BaseTax1": 0,
+    "BaseTax2": 3572,
+    "BaseTax3": 19822,
+    "BaseTax4": 54232
+  },
+  "BudgetRepairLevy": {
+    "Threshold": 180000,
+    "Rate": 0.02
+  }
+}
