@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using SalaryCalculatorApp.Interfaces;
 using SalaryCalculatorApp.Models;
 
@@ -7,80 +6,59 @@ namespace SalaryCalculatorApp.Services
 {
     /// <summary>
     /// Implementation of the salary calculator that computes the salary breakdown
-    /// including deductions and pay packet amounts based on provided strategies.
+    /// including deductions and pay packet amounts based on provided strategies and settings.
     /// </summary>
     public class SalaryCalculator : ISalaryCalculator
     {
-        private readonly IDeductionStrategy _incomeTaxStrategy;
-        private readonly IDeductionStrategy _medicareLevyStrategy;
-        private readonly IDeductionStrategy _budgetRepairLevyStrategy;
-
-        private readonly decimal _superannuationRate;
-        private readonly decimal _superannuationDenominator;
+        private readonly DeductionCalculator _deductionCalculator;
+        private readonly SalarySettingsConfig _salarySettings;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SalaryCalculator"/> class.
         /// </summary>
-        /// <param name="incomeTaxStrategy">Strategy for calculating income tax.</param>
-        /// <param name="medicareLevyStrategy">Strategy for calculating Medicare levy.</param>
-        /// <param name="budgetRepairLevyStrategy">Strategy for calculating budget repair levy.</param>
+        /// <param name="deductionCalculator">The calculator for various deductions (income tax, Medicare levy, budget repair levy).</param>
+        /// <param name="salarySettings">Configuration options for salary settings including superannuation rate and denominator.</param>
         public SalaryCalculator(
-            IDeductionStrategy incomeTaxStrategy,
-            IDeductionStrategy medicareLevyStrategy,
-            IDeductionStrategy budgetRepairLevyStrategy,
-            IOptions<SalarySettingsConfig> config)
+            DeductionCalculator deductionCalculator,
+            IOptions<SalarySettingsConfig> salarySettings)
         {
-            _incomeTaxStrategy = incomeTaxStrategy ?? throw new ArgumentNullException(nameof(incomeTaxStrategy));
-            _medicareLevyStrategy = medicareLevyStrategy ?? throw new ArgumentNullException(nameof(medicareLevyStrategy));
-            _budgetRepairLevyStrategy = budgetRepairLevyStrategy ?? throw new ArgumentNullException(nameof(budgetRepairLevyStrategy));
-            
-            // Validate and set configuration values
-            var salaryConfig = config?.Value ?? throw new ArgumentNullException(nameof(config), "Salary settings configuration cannot be null.");
-            _superannuationRate = salaryConfig.SuperannuationRate > 0
-                ? salaryConfig.SuperannuationRate
-                : throw new ArgumentException("Superannuation rate must be greater than zero.", nameof(salaryConfig.SuperannuationRate));
+            _deductionCalculator = deductionCalculator ?? throw new ArgumentNullException(nameof(deductionCalculator));
+            _salarySettings = salarySettings?.Value ?? throw new ArgumentNullException(nameof(salarySettings));
 
-            _superannuationDenominator = salaryConfig.SuperannuationDenominator > 0
-                ? salaryConfig.SuperannuationDenominator
-                : throw new ArgumentException("Superannuation denominator must be greater than zero.", nameof(salaryConfig.SuperannuationDenominator));
+            // Validate the salary settings to ensure they are correct
+            _salarySettings.Validate();
         }
 
         /// <summary>
         /// Calculates the detailed salary breakdown based on the gross package and pay frequency.
         /// </summary>
         /// <param name="grossPackage">The total gross salary package.</param>
-        /// <param name="payFrequency">The frequency of the salary payments.</param>
+        /// <param name="payFrequency">The frequency of the salary payments (e.g., Weekly, Fortnightly, Monthly).</param>
         /// <returns>A <see cref="SalaryBreakdown"/> object with detailed salary breakdown.</returns>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="grossPackage"/> is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown when <paramref name="payFrequency"/> is invalid.</exception>
         public SalaryBreakdown CalculateSalaryBreakdown(decimal grossPackage, PayFrequency payFrequency)
         {
+            // Validate that grossPackage is greater than zero
             if (grossPackage <= 0)
                 throw new ArgumentOutOfRangeException(nameof(grossPackage), "Gross package must be greater than zero.");
 
+            // Validate that payFrequency is a defined enum value
             if (!Enum.IsDefined(typeof(PayFrequency), payFrequency))
                 throw new ArgumentException("Invalid pay frequency.", nameof(payFrequency));
 
-            // Calculate superannuation based on a fixed rate
-            decimal superannuation = grossPackage * _superannuationRate / _superannuationDenominator;
+            // Calculate superannuation based on the provided rate and denominator
+            decimal superannuation = grossPackage * _salarySettings.SuperannuationRate / _salarySettings.SuperannuationDenominator;
             decimal taxableIncome = grossPackage - superannuation;
 
-            // Calculate deductions using the provided strategies
-            
-            decimal incomeTax = _incomeTaxStrategy.CalculateDeduction(taxableIncome);
-            decimal medicareLevy = _medicareLevyStrategy.CalculateDeduction(taxableIncome);
-            decimal budgetRepairLevy = _budgetRepairLevyStrategy.CalculateDeduction(taxableIncome);
-
-            // Round deductions to 2 decimal places
-            decimal roundedIncomeTax = Math.Round(incomeTax, 2);
-            decimal roundedMedicareLevy = Math.Round(medicareLevy, 2);
-            decimal roundedBudgetRepairLevy = Math.Round(budgetRepairLevy, 2);
+            // Calculate deductions using the DeductionCalculator
+            var (incomeTax, medicareLevy, budgetRepairLevy) = _deductionCalculator.CalculateDeductions(taxableIncome);
 
             // Calculate total deductions and net income
-            decimal totalDeductions = roundedIncomeTax + roundedMedicareLevy + roundedBudgetRepairLevy;
+            decimal totalDeductions = incomeTax + medicareLevy + budgetRepairLevy;
             decimal netIncome = Math.Round(grossPackage - superannuation - totalDeductions, 2);
 
-            // Calculate pay packet amount based on pay frequency
+            // Calculate the pay packet amount based on the pay frequency
             decimal payPacketAmount = payFrequency switch
             {
                 PayFrequency.Weekly => Math.Round(netIncome / 52, 2),
@@ -89,14 +67,15 @@ namespace SalaryCalculatorApp.Services
                 _ => throw new ArgumentException("Invalid pay frequency.")
             };
 
+            // Return the detailed salary breakdown
             return new SalaryBreakdown
             {
                 GrossPackage = grossPackage,
                 SuperContribution = Math.Round(superannuation, 2),
                 TaxableIncome = taxableIncome,
-                IncomeTax = roundedIncomeTax,
-                MedicareLevy = roundedMedicareLevy,
-                BudgetRepairLevy = roundedBudgetRepairLevy,
+                IncomeTax = incomeTax,
+                MedicareLevy = medicareLevy,
+                BudgetRepairLevy = budgetRepairLevy,
                 NetIncome = netIncome,
                 PayPacketAmount = payPacketAmount
             };

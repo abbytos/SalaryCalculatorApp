@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using SalaryCalculatorApp.Models;
-using SalaryCalculatorApp.Services;
 using SalaryCalculatorApp.Strategies;
+using SalaryCalculatorApp.Services;
 using SalaryCalculatorTests.Utils;
 
 namespace SalaryCalculatorApp.Tests
@@ -16,18 +16,17 @@ namespace SalaryCalculatorApp.Tests
 
         public SalaryCalculatorIntegrationTests()
         {
-            // Load configuration
+            // Load configuration from a JSON file.
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("config.json")
                 .Build();
 
-            // Use ConfigHelper to bind configuration sections to config models
+            // Bind configuration sections to config models using ConfigHelper.
             _incomeTaxConfig = ConfigHelper.LoadConfig<IncomeTaxConfig>(configuration, "IncomeTax");
             _medicareLevyConfig = ConfigHelper.LoadConfig<MedicareLevyConfig>(configuration, "MedicareLevy");
             _budgetRepairLevyConfig = ConfigHelper.LoadConfig<BudgetRepairLevyConfig>(configuration, "BudgetRepairLevy");
             _salarySettingsOptions = Options.Create(ConfigHelper.LoadConfig<SalarySettingsConfig>(configuration, "SalarySettings"));
-
         }
 
         public static IEnumerable<object[]> SalaryBreakdownTestData =>
@@ -36,7 +35,7 @@ namespace SalaryCalculatorApp.Tests
                 new object[] { 65000m, PayFrequency.Monthly, 10839.00m, 1188.00m, 0.00m, 5639.27m, 47333.73m, 3944.48m},
                 new object[] { 200000m, PayFrequency.Fortnightly, 55476.00m, 3653.00m, 52.00m, 17351.60m, 123467.40m, 4748.75m},
 
-                // Minimum non-zero salary
+                // Minimum non-zero salary test case
                 new object[] { 1m, PayFrequency.Monthly, 0.00m, 0.00m, 0.00m, 0.09m, 0.91m, 0.08m },
             };
 
@@ -53,14 +52,21 @@ namespace SalaryCalculatorApp.Tests
             decimal expectedPayPacketAmount)
         {
             // Arrange
+            // Create Options instances for deduction strategies
             var optionsIncomeTax = Options.Create(_incomeTaxConfig);
             var optionsMedicareLevy = Options.Create(_medicareLevyConfig);
             var optionsBudgetRepairLevy = Options.Create(_budgetRepairLevyConfig);
 
-            var salaryCalculator = new SalaryCalculator(
+            // Instantiate DeductionCalculator with the strategies
+            var deductionCalculator = new DeductionCalculator(
                 new IncomeTaxStrategy(optionsIncomeTax),
                 new MedicareLevyStrategy(optionsMedicareLevy),
-                new BudgetRepairLevyStrategy(optionsBudgetRepairLevy),
+                new BudgetRepairLevyStrategy(optionsBudgetRepairLevy)
+            );
+
+            // Instantiate SalaryCalculator with DeductionCalculator and SalarySettings
+            var salaryCalculator = new SalaryCalculator(
+                deductionCalculator,
                 _salarySettingsOptions
             );
 
@@ -68,6 +74,7 @@ namespace SalaryCalculatorApp.Tests
             var breakdown = salaryCalculator.CalculateSalaryBreakdown(grossPackage, payFrequency);
 
             // Assert
+            // Validate results with expected values, allowing for precision up to 2 decimal places
             Assert.Equal(expectedIncomeTax, breakdown.IncomeTax, 2);
             Assert.Equal(expectedMedicareLevy, breakdown.MedicareLevy, 2);
             Assert.Equal(expectedBudgetRepairLevy, breakdown.BudgetRepairLevy, 2);

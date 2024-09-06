@@ -49,19 +49,21 @@ namespace SalaryCalculatorApp.Utils
             services.Configure<BudgetRepairLevyConfig>(configuration.GetSection("BudgetRepairLevy"));
             services.Configure<SalarySettingsConfig>(configuration.GetSection("SalarySettings"));
 
-
             // Register strategy classes for dependency injection.
             services.AddSingleton<IncomeTaxStrategy>();
             services.AddSingleton<MedicareLevyStrategy>();
             services.AddSingleton<BudgetRepairLevyStrategy>();
 
-            // Register the salary calculator service with its dependencies.
-            services.AddSingleton<ISalaryCalculator>(sp => new SalaryCalculator(
+            // Register DeductionCalculator class
+            services.AddSingleton(sp => new DeductionCalculator(
                 sp.GetRequiredService<IncomeTaxStrategy>(),
                 sp.GetRequiredService<MedicareLevyStrategy>(),
-                sp.GetRequiredService<BudgetRepairLevyStrategy>(),
-                sp.GetRequiredService<IOptions<SalarySettingsConfig>>() 
-            ));
+                sp.GetRequiredService<BudgetRepairLevyStrategy>()));
+
+            // Register the salary calculator service with its dependencies.
+            services.AddSingleton<ISalaryCalculator>(sp => new SalaryCalculator(
+                sp.GetRequiredService<DeductionCalculator>(),
+                sp.GetRequiredService<IOptions<SalarySettingsConfig>>()));
         }
     }
 }

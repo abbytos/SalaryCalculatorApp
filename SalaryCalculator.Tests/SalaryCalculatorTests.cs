@@ -1,9 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using SalaryCalculatorApp.Models;
-using SalaryCalculatorApp.Services; 
+using SalaryCalculatorApp.Services;
 using SalaryCalculatorApp.Strategies;
-using Xunit;
 using SalaryCalculatorTests.Utils;
 
 namespace SalaryCalculatorApp.Tests
@@ -18,18 +17,17 @@ namespace SalaryCalculatorApp.Tests
 
         public SalaryCalculatorTests()
         {
-            // Load configuration
+            // Load configuration from the JSON file using ConfigHelper.
             _configuration = ConfigHelper.LoadConfiguration();
 
-            // Initialize options from the configuration
+            // Initialize options instances for each config section.
             _incomeTaxOptions = Options.Create(ConfigHelper.LoadConfig<IncomeTaxConfig>(_configuration, "IncomeTax"));
             _medicareLevyOptions = Options.Create(ConfigHelper.LoadConfig<MedicareLevyConfig>(_configuration, "MedicareLevy"));
             _budgetRepairLevyOptions = Options.Create(ConfigHelper.LoadConfig<BudgetRepairLevyConfig>(_configuration, "BudgetRepairLevy"));
             _salarySettingsOptions = Options.Create(ConfigHelper.LoadConfig<SalarySettingsConfig>(_configuration, "SalarySettings"));
-
         }
 
-        // Test data for valid salary breakdown calculations.
+        // Test data for valid salary breakdown calculations
         public static IEnumerable<object[]> SalaryBreakdownTestData =>
            new List<object[]>
            {
@@ -42,7 +40,7 @@ namespace SalaryCalculatorApp.Tests
                 new object[] { 1m, PayFrequency.Monthly, 0.00m, 0.00m, 0.00m, 0.09m, 0.91m, 0.08m },
            };
 
-        // Test data for invalid input scenarios to ensure error handling
+        // Test data for invalid input scenarios to verify error handling
         public static IEnumerable<object[]> InvalidInputTestData =>
             new List<object[]>
             {
@@ -67,12 +65,13 @@ namespace SalaryCalculatorApp.Tests
             decimal expectedNetIncome,
             decimal expectedPayPacketAmount)
         {
-
             // Arrange
             var salaryCalculator = new SalaryCalculator(
-                new IncomeTaxStrategy(_incomeTaxOptions),
-                new MedicareLevyStrategy(_medicareLevyOptions),
-                new BudgetRepairLevyStrategy(_budgetRepairLevyOptions),
+                new DeductionCalculator(
+                    new IncomeTaxStrategy(_incomeTaxOptions),
+                    new MedicareLevyStrategy(_medicareLevyOptions),
+                    new BudgetRepairLevyStrategy(_budgetRepairLevyOptions)
+                ),
                 _salarySettingsOptions
             );
 
@@ -95,13 +94,15 @@ namespace SalaryCalculatorApp.Tests
             PayFrequency payFrequency,
             Type expectedExceptionType)
         {
-           // Arrange
-           var salaryCalculator = new SalaryCalculator(
-               new IncomeTaxStrategy(_incomeTaxOptions),
-               new MedicareLevyStrategy(_medicareLevyOptions),
-               new BudgetRepairLevyStrategy(_budgetRepairLevyOptions),
-               _salarySettingsOptions
-           );
+            // Arrange
+            var salaryCalculator = new SalaryCalculator(
+                new DeductionCalculator(
+                    new IncomeTaxStrategy(_incomeTaxOptions),
+                    new MedicareLevyStrategy(_medicareLevyOptions),
+                    new BudgetRepairLevyStrategy(_budgetRepairLevyOptions)
+                ),
+                _salarySettingsOptions
+            );
 
             // Act & Assert
             var exception = Assert.Throws(expectedExceptionType, () =>
