@@ -13,6 +13,11 @@ namespace SalaryCalculatorApp.Services
         private readonly DeductionCalculator _deductionCalculator;
         private readonly SalarySettingsConfig _salarySettings;
 
+        private const int WeeksInYear = 52;
+        private const int FortnightsInYear = 26;
+        private const int MonthsInYear = 12;
+        private const int DecimalPrecision = 2;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SalaryCalculator"/> class.
         /// </summary>
@@ -25,7 +30,6 @@ namespace SalaryCalculatorApp.Services
             _deductionCalculator = deductionCalculator ?? throw new ArgumentNullException(nameof(deductionCalculator));
             _salarySettings = salarySettings?.Value ?? throw new ArgumentNullException(nameof(salarySettings));
 
-            // Validate the salary settings to ensure they are correct
             _salarySettings.Validate();
         }
 
@@ -39,31 +43,25 @@ namespace SalaryCalculatorApp.Services
         /// <exception cref="ArgumentException">Thrown when <paramref name="payFrequency"/> is invalid.</exception>
         public SalaryBreakdown CalculateSalaryBreakdown(decimal grossPackage, PayFrequency payFrequency)
         {
-            // Validate that grossPackage is greater than zero
             if (grossPackage <= 0)
-                throw new ArgumentOutOfRangeException(nameof(grossPackage), "Gross package must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(grossPackage), grossPackage, "Gross package must be greater than zero.");
 
-            // Validate that payFrequency is a defined enum value
             if (!Enum.IsDefined(typeof(PayFrequency), payFrequency))
-                throw new ArgumentException("Invalid pay frequency.", nameof(payFrequency));
+                throw new ArgumentException($"The provided pay frequency '{payFrequency}' is not valid.", nameof(payFrequency));
 
-            // Calculate superannuation based on the provided rate and denominator
             decimal superannuation = grossPackage * _salarySettings.SuperannuationRate / _salarySettings.SuperannuationDenominator;
             decimal taxableIncome = grossPackage - superannuation;
 
-            // Calculate deductions using the DeductionCalculator
             var (incomeTax, medicareLevy, budgetRepairLevy) = _deductionCalculator.CalculateDeductions(taxableIncome);
 
-            // Calculate total deductions and net income
             decimal totalDeductions = incomeTax + medicareLevy + budgetRepairLevy;
-            decimal netIncome = Math.Round(grossPackage - superannuation - totalDeductions, 2);
+            decimal netIncome = Math.Round(grossPackage - superannuation - totalDeductions, DecimalPrecision);
 
-            // Calculate the pay packet amount based on the pay frequency
             decimal payPacketAmount = payFrequency switch
             {
-                PayFrequency.Weekly => Math.Round(netIncome / 52, 2),
-                PayFrequency.Fortnightly => Math.Round(netIncome / 26, 2),
-                PayFrequency.Monthly => Math.Round(netIncome / 12, 2),
+                PayFrequency.Weekly => Math.Round(netIncome / WeeksInYear, DecimalPrecision),
+                PayFrequency.Fortnightly => Math.Round(netIncome / FortnightsInYear, DecimalPrecision),
+                PayFrequency.Monthly => Math.Round(netIncome / MonthsInYear, DecimalPrecision),
                 _ => throw new ArgumentException("Invalid pay frequency.")
             };
 
@@ -71,7 +69,7 @@ namespace SalaryCalculatorApp.Services
             return new SalaryBreakdown
             {
                 GrossPackage = grossPackage,
-                SuperContribution = Math.Round(superannuation, 2),
+                SuperContribution = Math.Round(superannuation, DecimalPrecision),
                 TaxableIncome = taxableIncome,
                 IncomeTax = incomeTax,
                 MedicareLevy = medicareLevy,
