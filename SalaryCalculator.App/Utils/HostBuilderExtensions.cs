@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using SalaryCalculatorApp.Interfaces;
 using SalaryCalculatorApp.Models;
 using SalaryCalculatorApp.Services;
@@ -46,6 +47,8 @@ namespace SalaryCalculatorApp.Utils
             services.Configure<IncomeTaxConfig>(configuration.GetSection("IncomeTax"));
             services.Configure<MedicareLevyConfig>(configuration.GetSection("MedicareLevy"));
             services.Configure<BudgetRepairLevyConfig>(configuration.GetSection("BudgetRepairLevy"));
+            services.Configure<SalarySettingsConfig>(configuration.GetSection("SalarySettings"));
+
 
             // Register strategy classes for dependency injection.
             services.AddSingleton<IncomeTaxStrategy>();
@@ -56,7 +59,8 @@ namespace SalaryCalculatorApp.Utils
             services.AddSingleton<ISalaryCalculator>(sp => new SalaryCalculator(
                 sp.GetRequiredService<IncomeTaxStrategy>(),
                 sp.GetRequiredService<MedicareLevyStrategy>(),
-                sp.GetRequiredService<BudgetRepairLevyStrategy>()
+                sp.GetRequiredService<BudgetRepairLevyStrategy>(),
+                sp.GetRequiredService<IOptions<SalarySettingsConfig>>() 
             ));
         }
     }

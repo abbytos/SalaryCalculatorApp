@@ -14,6 +14,7 @@ namespace SalaryCalculatorApp.Tests
         private IOptions<IncomeTaxConfig> _incomeTaxOptions;
         private IOptions<MedicareLevyConfig> _medicareLevyOptions;
         private IOptions<BudgetRepairLevyConfig> _budgetRepairLevyOptions;
+        private IOptions<SalarySettingsConfig> _salarySettingsOptions;
 
         public SalaryCalculatorTests()
         {
@@ -24,6 +25,8 @@ namespace SalaryCalculatorApp.Tests
             _incomeTaxOptions = Options.Create(ConfigHelper.LoadConfig<IncomeTaxConfig>(_configuration, "IncomeTax"));
             _medicareLevyOptions = Options.Create(ConfigHelper.LoadConfig<MedicareLevyConfig>(_configuration, "MedicareLevy"));
             _budgetRepairLevyOptions = Options.Create(ConfigHelper.LoadConfig<BudgetRepairLevyConfig>(_configuration, "BudgetRepairLevy"));
+            _salarySettingsOptions = Options.Create(ConfigHelper.LoadConfig<SalarySettingsConfig>(_configuration, "SalarySettings"));
+
         }
 
         // Test data for valid salary breakdown calculations.
@@ -64,11 +67,13 @@ namespace SalaryCalculatorApp.Tests
             decimal expectedNetIncome,
             decimal expectedPayPacketAmount)
         {
+
             // Arrange
             var salaryCalculator = new SalaryCalculator(
                 new IncomeTaxStrategy(_incomeTaxOptions),
                 new MedicareLevyStrategy(_medicareLevyOptions),
-                new BudgetRepairLevyStrategy(_budgetRepairLevyOptions)
+                new BudgetRepairLevyStrategy(_budgetRepairLevyOptions),
+                _salarySettingsOptions
             );
 
             // Act
@@ -94,7 +99,8 @@ namespace SalaryCalculatorApp.Tests
            var salaryCalculator = new SalaryCalculator(
                new IncomeTaxStrategy(_incomeTaxOptions),
                new MedicareLevyStrategy(_medicareLevyOptions),
-               new BudgetRepairLevyStrategy(_budgetRepairLevyOptions)
+               new BudgetRepairLevyStrategy(_budgetRepairLevyOptions),
+               _salarySettingsOptions
            );
 
             // Act & Assert

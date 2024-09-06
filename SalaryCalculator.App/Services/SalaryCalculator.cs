@@ -1,4 +1,6 @@
-﻿using SalaryCalculatorApp.Interfaces;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using SalaryCalculatorApp.Interfaces;
 using SalaryCalculatorApp.Models;
 
 namespace SalaryCalculatorApp.Services
@@ -13,8 +15,8 @@ namespace SalaryCalculatorApp.Services
         private readonly IDeductionStrategy _medicareLevyStrategy;
         private readonly IDeductionStrategy _budgetRepairLevyStrategy;
 
-        private const decimal SuperannuationRate = 9.5m;
-        private const decimal SuperannuationDenominator = 109.5m;
+        private readonly decimal _superannuationRate;
+        private readonly decimal _superannuationDenominator;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SalaryCalculator"/> class.
@@ -25,11 +27,22 @@ namespace SalaryCalculatorApp.Services
         public SalaryCalculator(
             IDeductionStrategy incomeTaxStrategy,
             IDeductionStrategy medicareLevyStrategy,
-            IDeductionStrategy budgetRepairLevyStrategy)
+            IDeductionStrategy budgetRepairLevyStrategy,
+            IOptions<SalarySettingsConfig> config)
         {
             _incomeTaxStrategy = incomeTaxStrategy ?? throw new ArgumentNullException(nameof(incomeTaxStrategy));
             _medicareLevyStrategy = medicareLevyStrategy ?? throw new ArgumentNullException(nameof(medicareLevyStrategy));
             _budgetRepairLevyStrategy = budgetRepairLevyStrategy ?? throw new ArgumentNullException(nameof(budgetRepairLevyStrategy));
+            
+            // Validate and set configuration values
+            var salaryConfig = config?.Value ?? throw new ArgumentNullException(nameof(config), "Salary settings configuration cannot be null.");
+            _superannuationRate = salaryConfig.SuperannuationRate > 0
+                ? salaryConfig.SuperannuationRate
+                : throw new ArgumentException("Superannuation rate must be greater than zero.", nameof(salaryConfig.SuperannuationRate));
+
+            _superannuationDenominator = salaryConfig.SuperannuationDenominator > 0
+                ? salaryConfig.SuperannuationDenominator
+                : throw new ArgumentException("Superannuation denominator must be greater than zero.", nameof(salaryConfig.SuperannuationDenominator));
         }
 
         /// <summary>
@@ -49,7 +62,7 @@ namespace SalaryCalculatorApp.Services
                 throw new ArgumentException("Invalid pay frequency.", nameof(payFrequency));
 
             // Calculate superannuation based on a fixed rate
-            decimal superannuation = grossPackage * SuperannuationRate / SuperannuationDenominator;
+            decimal superannuation = grossPackage * _superannuationRate / _superannuationDenominator;
             decimal taxableIncome = grossPackage - superannuation;
 
             // Calculate deductions using the provided strategies

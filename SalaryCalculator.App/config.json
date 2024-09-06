@@ -28,5 +28,9 @@
   "BudgetRepairLevy": {
     "Threshold": 180000,
     "Rate": 0.02
+  },
+  "SalarySettings": {
+    "SuperannuationRate": 9.5,
+    "SuperannuationDenominator": 109.5
   }
 }

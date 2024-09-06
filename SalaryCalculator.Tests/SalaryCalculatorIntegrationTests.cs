@@ -12,6 +12,7 @@ namespace SalaryCalculatorApp.Tests
         private readonly IncomeTaxConfig _incomeTaxConfig;
         private readonly MedicareLevyConfig _medicareLevyConfig;
         private readonly BudgetRepairLevyConfig _budgetRepairLevyConfig;
+        private IOptions<SalarySettingsConfig> _salarySettingsOptions;
 
         public SalaryCalculatorIntegrationTests()
         {
@@ -25,6 +26,8 @@ namespace SalaryCalculatorApp.Tests
             _incomeTaxConfig = ConfigHelper.LoadConfig<IncomeTaxConfig>(configuration, "IncomeTax");
             _medicareLevyConfig = ConfigHelper.LoadConfig<MedicareLevyConfig>(configuration, "MedicareLevy");
             _budgetRepairLevyConfig = ConfigHelper.LoadConfig<BudgetRepairLevyConfig>(configuration, "BudgetRepairLevy");
+            _salarySettingsOptions = Options.Create(ConfigHelper.LoadConfig<SalarySettingsConfig>(configuration, "SalarySettings"));
+
         }
 
         public static IEnumerable<object[]> SalaryBreakdownTestData =>
@@ -57,7 +60,8 @@ namespace SalaryCalculatorApp.Tests
             var salaryCalculator = new SalaryCalculator(
                 new IncomeTaxStrategy(optionsIncomeTax),
                 new MedicareLevyStrategy(optionsMedicareLevy),
-                new BudgetRepairLevyStrategy(optionsBudgetRepairLevy)
+                new BudgetRepairLevyStrategy(optionsBudgetRepairLevy),
+                _salarySettingsOptions
             );
 
             // Act
