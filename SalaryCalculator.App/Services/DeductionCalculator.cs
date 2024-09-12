@@ -21,7 +21,7 @@ namespace SalaryCalculatorApp.Services
             IDeductionStrategy incomeTaxStrategy,
             IDeductionStrategy medicareLevyStrategy,
             IDeductionStrategy budgetRepairLevyStrategy)
-        {
+        { 
             _incomeTaxStrategy = incomeTaxStrategy ?? throw new ArgumentNullException(nameof(incomeTaxStrategy));
             _medicareLevyStrategy = medicareLevyStrategy ?? throw new ArgumentNullException(nameof(medicareLevyStrategy));
             _budgetRepairLevyStrategy = budgetRepairLevyStrategy ?? throw new ArgumentNullException(nameof(budgetRepairLevyStrategy));

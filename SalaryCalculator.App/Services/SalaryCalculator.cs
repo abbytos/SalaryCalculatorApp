@@ -13,9 +13,6 @@ namespace SalaryCalculatorApp.Services
         private readonly DeductionCalculator _deductionCalculator;
         private readonly SalarySettingsConfig _salarySettings;
 
-        private const int WeeksInYear = 52;
-        private const int FortnightsInYear = 26;
-        private const int MonthsInYear = 12;
         private const int DecimalPrecision = 2;
 
         /// <summary>
@@ -59,9 +56,9 @@ namespace SalaryCalculatorApp.Services
 
             decimal payPacketAmount = payFrequency switch
             {
-                PayFrequency.Weekly => Math.Round(netIncome / WeeksInYear, DecimalPrecision),
-                PayFrequency.Fortnightly => Math.Round(netIncome / FortnightsInYear, DecimalPrecision),
-                PayFrequency.Monthly => Math.Round(netIncome / MonthsInYear, DecimalPrecision),
+                PayFrequency.Weekly => Math.Round(netIncome / (int)PayFrequency.Weekly, DecimalPrecision),
+                PayFrequency.Fortnightly => Math.Round(netIncome / (int)PayFrequency.Fortnightly, DecimalPrecision),
+                PayFrequency.Monthly => Math.Round(netIncome / (int)PayFrequency.Monthly, DecimalPrecision),
                 _ => throw new ArgumentException("Invalid pay frequency.")
             };
 

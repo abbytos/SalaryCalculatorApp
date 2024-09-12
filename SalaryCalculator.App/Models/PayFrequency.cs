@@ -8,16 +8,16 @@
         /// <summary>
         /// Indicates a weekly payment frequency, where salary is paid every week.
         /// </summary>
-        Weekly,
+        Weekly = 52,
 
         /// <summary>
         /// Indicates a fortnightly payment frequency, where salary is paid every two weeks.
         /// </summary>
-        Fortnightly,
+        Fortnightly = 26,
 
         /// <summary>
         /// Indicates a monthly payment frequency, where salary is paid once a month.
         /// </summary>
-        Monthly
+        Monthly = 12
     }
 }
